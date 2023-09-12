@@ -11,58 +11,79 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
         
         private string[] _dictionary;
         private string[] _levelsConfig;
-        
-        public GridFillWords LoadModel(int index)
+
+        public ProviderFillwordLevel()
         {
             LoadConfigs();
-            
+        }
+
+        public GridFillWords LoadModel(int index)
+        {
             var  currentLevelId = index - 1;
             if (InvalidLevelId(currentLevelId))
                 throw new Exception();
             
-            var nextIndex = index + 1;
-            
             var levelConfig = GetLevelConfig(currentLevelId);
             if(levelConfig == null)
-                return LoadModel(nextIndex);
+                return LoadNextModel(currentLevelId);
             
             var size = GetSize(levelConfig);
 
             if (!TryBuildGrid(size, out var gridSize)) 
-                return LoadModel(nextIndex);
+                return LoadNextModel(currentLevelId);
 
+            return CreateModel(size, gridSize, levelConfig, currentLevelId);
+        }
+
+        private GridFillWords CreateModel(int size, int gridSize, string[] levelConfig, int currenLevelId)
+        {
             var rez = new GridFillWords(new Vector2Int(gridSize, gridSize));
             for (int i = 0; i < levelConfig.Length - 1; i++)
             {
                 var word = GetWord(levelConfig[i]);
-                var letterPositions = levelConfig[i + 1].Split(';');
-                
-                if (word.Length != letterPositions.Length) 
-                    return LoadModel(nextIndex);
+                var letterPositions = GetLetterPositions(levelConfig[i+1]);
+                if (WorldLengthNotEqualConfig(word, letterPositions))
+                    return LoadNextModel(currenLevelId);
 
                 for (int j = 0; j < word.Length; j++)
                 {
                     var letterPosition = int.Parse(letterPositions[j]);
-                    
-                    if (letterPosition >= size) 
-                        return LoadModel(nextIndex);
-                    
+                    if (LetterOutOfRange(size, letterPosition))
+                        return LoadNextModel(currenLevelId);
+
                     var gridPosition = ConvertPositionToGrid(letterPosition, gridSize);
-                    
-                    if (rez.Get(gridPosition.x, gridPosition.y) != null) 
-                        return LoadModel(nextIndex);
-                    
+                    if (GridHasLetter(rez, gridPosition))
+                        return LoadNextModel(currenLevelId);
+
                     rez.Set(gridPosition.x, gridPosition.y, new CharGridModel(word[j]));
                 }
                 i++;
             }
-
             return rez;
+        }
+
+        private static string[] GetLetterPositions(string levelConfig) =>
+            levelConfig.Split(';');
+
+        private static bool WorldLengthNotEqualConfig(string word, string[] letterPositions) =>
+            word.Length != letterPositions.Length;
+
+        private static bool GridHasLetter(GridFillWords rez, Vector2Int gridPosition) =>
+            rez.Get(gridPosition.x, gridPosition.y) != null;
+
+        private static bool LetterOutOfRange(int size, int letterPosition) =>
+            letterPosition >= size || letterPosition < 0;
+
+        private GridFillWords LoadNextModel(int currentLevelId)
+        {
+            Debug.LogError($"Invalid level: ID - {currentLevelId}");
+            var nextLevelIndex = currentLevelId + 2;
+            return LoadModel(nextLevelIndex);
         }
 
         private bool InvalidLevelId(int index)
         {
-            return index > _levelsConfig.Length || index < 0;
+            return index >= _levelsConfig.Length || index < 0;
         }
 
         private string[] GetLevelConfig(int levelId)
@@ -80,7 +101,6 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
                 size += word.Length;
                 i++;
             }
-
             return size;
         }
 
@@ -93,7 +113,6 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
 
         private void LoadConfigs()
         {
-            if (_dictionary != null || _levelsConfig != null) return;
             _dictionary = ParseFile(DictionaryPath);
             _levelsConfig = ParseFile(LevelsConfigPath);
         }
@@ -116,6 +135,8 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
         private string[] ParseFile(string path)
         {
             var textFile = Resources.Load<TextAsset>(path);
+            if (textFile == null)
+                throw new Exception();
             var rez = textFile.text.Split("\r\n");
             return rez;
         }
