@@ -59,6 +59,7 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
                 }
                 i++;
             }
+            
             return rez;
         }
 
@@ -78,13 +79,12 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
         {
             Debug.LogError($"Invalid level: ID - {currentLevelId}");
             var nextLevelIndex = currentLevelId + 2;
+            
             return LoadModel(nextLevelIndex);
         }
 
-        private bool InvalidLevelId(int index)
-        {
-            return index >= _levelsConfig.Length || index < 0;
-        }
+        private bool InvalidLevelId(int index) => 
+            index >= _levelsConfig.Length || index < 0;
 
         private string[] GetLevelConfig(int levelId)
         {
@@ -120,7 +120,7 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
         private Vector2Int ConvertPositionToGrid(int position, int gridSize)
         {
             var x = Mathf.CeilToInt(position / gridSize);
-            var y = position - (x * gridSize);
+            var y = position - x * gridSize;
             return new Vector2Int(x, y);
         }
 
