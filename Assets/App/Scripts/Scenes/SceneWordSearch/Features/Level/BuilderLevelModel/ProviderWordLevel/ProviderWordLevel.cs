@@ -10,11 +10,11 @@ namespace App.Scripts.Scenes.SceneWordSearch.Features.Level.BuilderLevelModel.Pr
 
         public LevelInfo LoadLevelData(int levelIndex)
         {
-            var textFile = Resources.Load<TextAsset>(LevelsPath + levelIndex.ToString());
-            if (textFile == null) 
+            var textFile = Resources.Load<TextAsset>(LevelsPath + levelIndex);
+            var rez = JsonUtility.FromJson<LevelInfo>(textFile.text);
+            if (rez == null)
                 throw new Exception();
             
-            var rez = JsonUtility.FromJson<LevelInfo>(textFile.text);
             return rez;
         }
     }
