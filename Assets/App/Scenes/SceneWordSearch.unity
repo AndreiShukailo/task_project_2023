@@ -709,9 +709,6 @@ MonoBehaviour:
   configLevelSelection:
     TotalLevelCount: 3
     InitLevelIndex: 1
-  configLevelLoading:
-    FolderResourceLevels: WordSearch/Levels
-    FormatLevelName: '{0}'
 --- !u!1 &1050486781
 GameObject:
   m_ObjectHideFlags: 0
